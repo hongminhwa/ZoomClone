@@ -1,6 +1,7 @@
 import express from "express"; 
 import http from "http"; 
-import WebSocket from "ws";
+// import WebSocket from "ws";
+import  SocketIO from "socket.io";
 const PORT = 4000; 
 
 const app = express(); 
@@ -22,41 +23,67 @@ const handleListening=  () => {
 };
 
 
-const server = http.createServer(app);
-const wss = new WebSocket.Server({ server }); 
+const httpServer = http.createServer(app);
+
+const wsServer = SocketIO(httpServer);
 
 
-function onSocketClose() {
-    console.log("DisConnected from browser");
-}
+wsServer.on("connection", (socket) => {
+    socket.onAny((event) => {
+        console.log(`Socket Event: ${event}`); 
+    });
+
+    socket.on("enter-room", (roomName, Done) => { 
+        console.log(socket.id); 
+        socket.join(roomName); 
+        Done(); 
+        console.log(roomName);
+        socket.to(roomName).emit("welcome"); 
+    }); 
+    socket.on("disconnecting", () => {
+        socket.rooms.forEach(room => socket.to(room).emit("bye")); 
+    }); 
+     socket.on("new-message", (msg, room, done) => {
+        socket.to(room).emit("new-message", msg); 
+        done(); 
+     });
+});
+
+
+
+// function onSocketClose() {
+//     console.log("DisConnected from browser");
+// }
 
 // function onSocketMessage(message) {
 //     console.log("This is " + message);
 // }
-const sockets = [ ];
+// const sockets = [ ];
 
 
-wss.on("connection", (socket) => {
-    sockets.push(socket); 
-    socket["nickname"] = "Anon";
-    console.log("connected to Browser");
-    socket.on("close", onSocketClose); 
-    // socket.on("message", onSocketMessage ); 
-    socket.on("message", (msg) => {
-       const message = JSON.parse(msg);  
-    switch (message.type) {
-        case "new-message": 
-       sockets.forEach((aSocket)=> aSocket.send
-             (`${socket.nickname}: ${message.payload}`));
-            break;
-             case "nickname": 
-            console.log(message.payload);
-            socket["nickname"] = message.payload;
-            break;
-        }
-    });
-});
+// const wss = new WebSocket.Server({ server }); 
+// wss.on("connection", (socket) => {
+//     sockets.push(socket); 
+//     socket["nickname"] = "Anon";
+//     console.log("connected to Browser");
+//     socket.on("close", onSocketClose); 
+//     // socket.on("message", onSocketMessage ); 
+//     socket.on("message", (msg) => {
+//        const message = JSON.parse(msg);  
+//     switch (message.type) {
+//         case "new-message": 
+//        sockets.forEach((aSocket)=> aSocket.send
+//              (`${socket.nickname}: ${message.payload}`));
+//             break;
+//              case "nickname": 
+//             console.log(message.payload);
+//             socket["nickname"] = message.payload;
+//             break;
+//         }
+//     });
+// });
 
 
-server.listen(PORT, handleListening);
+
+httpServer.listen(PORT, handleListening);
 
