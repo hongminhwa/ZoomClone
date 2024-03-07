@@ -28,26 +28,30 @@ const httpServer = http.createServer(app);
 const wsServer = SocketIO(httpServer);
 
 
-wsServer.on("connection", (socket) => {
+wsServer.on("connection", (socket) => { 
+    socket["nickname"] = "Anon";
     socket.onAny((event) => {
         console.log(`Socket Event: ${event}`); 
     });
 
-    socket.on("enter-room", (roomName, Done) => { 
-        console.log(socket.id); 
-        socket.join(roomName); 
-        Done(); 
+    socket.on("enter-room", (roomName, nickname, done) => { 
+        console.log(socket.id);
+        socket["nickname"] = nickname; 
+        socket.join(roomName);   
         console.log(roomName);
-        socket.to(roomName).emit("welcome"); 
+        socket.to(roomName).emit("welcome", socket.nickname); 
+        done(); 
     }); 
     socket.on("disconnecting", () => {
-        socket.rooms.forEach(room => socket.to(room).emit("bye")); 
+        socket.rooms.forEach((room) => socket.to(room).emit("bye", socket.nickname)); 
     }); 
      socket.on("new-message", (msg, room, done) => {
-        socket.to(room).emit("new-message", msg); 
+        socket.to(room).emit("new-message", `${socket.nickname}: ${msg}`); 
         done(); 
      });
-});
+     socket.on("nickname", (nickname) => (socket["nickname"] = nickname)); 
+     
+    });
 
 
 

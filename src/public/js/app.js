@@ -19,7 +19,7 @@ function addMessage(message) {
 
 function handleMessageSubmit(event) {
     event.preventDefault(); 
-    const input = room.querySelector("input"); 
+    const input = room.querySelector("#msg input"); 
     const value = input.value;
     socket.emit("new-message", input.value,
        roomName, ()=> {
@@ -29,38 +29,53 @@ function handleMessageSubmit(event) {
 } 
 
 
+function handleNicknameSubmit(event) {
+    event.preventDefault(); 
+    const input = room.querySelector("#name input"); 
+    socket.emit("nickname", input.value);
+}
 
 
 
-function showRoom(msg) {
-    console.log(`The backend says: `, msg ); 
+function showRoom() {
+    // console.log(`The backend says: `, msg ); 
     welcome.hidden = true; 
     room.hidden = false;
     const h3 = room.querySelector("h3");
     h3.innerText = `Room ${roomName}`;
-    const form = room.querySelector("form"); 
-    form.addEventListener("submit", handleMessageSubmit)
+    const msgForm = room.querySelector("#msg"); 
+    const nameForm = room.querySelector("#name"); 
+    msgForm.addEventListener("submit", handleMessageSubmit);
+    nameForm.addEventListener("submit", handleNicknameSubmit);
 
 };
 
 
-
+////
 function handleRoomSubmit(event) {
+    const roomNameInput = form.querySelector("#roomName"); 
+    const nicknameInput = form.querySelector("#name");
     event.preventDefault();  
-    const input = form.querySelector("input"); 
-    socket.emit("enter-room", input.value,  showRoom);
-    //value값이라는 room이 있으면 함수를 실행한다.
-    roomName = input.value;
-    input.value ="";
- 
+
+    socket.emit("enter-room", roomNameInput.value,  nicknameInput.value , showRoom); 
+    roomName = roomNameInput.value; 
+    roomNameInput.value = ""; 
+    const changeNameInput = room.querySelector("#name input"); 
+    changeNameInput.value = nicknameInput.value; 
+    //value값이라는 room이 있으면 함수를 실행한다 
 }
+
 form.addEventListener("submit", handleRoomSubmit); 
 
-socket.on("welcome", ()=> {
-    addMessage("someone Joined!");
+socket.on("welcome", (user)=> {
+    console.log("user:"+ user);
+    addMessage(`${user} welcome! `);
 });
-socket.on("bye", ()=> {
-    addMessage("someone lefted!");
+
+socket.on("bye", (left)=> {
+    console.log("user:" + left);
+    addMessage(`${left} goodBye`);
+
 });
 
 socket.on("new-message", addMessage);
