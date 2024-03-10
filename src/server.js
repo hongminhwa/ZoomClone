@@ -24,8 +24,30 @@ const handleListening=  () => {
 
 
 
-const httpServer = http.createServer(app); 
+
+const httpServer = http.createServer(app);
 const wsServer = SocketIO(httpServer);
+
+// wsServer.on("connection", (socket) => {
+//   socket.on("join_room", (roomName, done) => {
+//     socket.join(roomName);
+//     done();
+//     socket.to(roomName).emit("welcome");
+//   });
+// })
+
+
+wsServer.on("connection", (socket) => {
+    socket.on("join_room", (roomName, done) => { 
+        //startMedia를 done으로 받는다. 
+        socket.join(roomName); 
+        done(); 
+        socket.to(roomName).emit("welcome");
+    });
+    socket.on("offer", (offer, roomName) => {
+        socket.to(roomName).emit("offer", offer);
+    });
+});
 
 httpServer.listen(PORT, handleListening);
 
