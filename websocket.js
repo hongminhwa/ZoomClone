@@ -1,5 +1,5 @@
-//app.js websocket
-
+websocket
+/////////////app.js/////////////////////////////////
 
 const messageList = document.querySelector("ul");
 const nickForm = document.querySelector("#nick");
@@ -55,7 +55,7 @@ function handleNickSubmit(event) {
 messageForm.addEventListener("submit", handleSubmit);
 nickForm.addEventListener("submit", handleNickSubmit);
 
-///////////////pug
+///////////////pug///////////////////////////////////
 // main 
 // form#nick
 //     input(type="text", placeholder="choose a nickname", required)
@@ -66,36 +66,35 @@ nickForm.addEventListener("submit", handleNickSubmit);
 //     button Send        
 
 
-//////////server.js 
+//////////server.js///////////////////////////////// 
+function onSocketClose() {
+    console.log("DisConnected from browser");
+}
 
-// function onSocketClose() {
-//     console.log("DisConnected from browser");
-// }
-
-// function onSocketMessage(message) {
-//     console.log("This is " + message);
-// }
-// const sockets = [ ];
+function onSocketMessage(message) {
+    console.log("This is " + message);
+}
+const sockets = [ ];
 
 
-// const wss = new WebSocket.Server({ server }); 
-// wss.on("connection", (socket) => {
-//     sockets.push(socket); 
-//     socket["nickname"] = "Anon";
-//     console.log("connected to Browser");
-//     socket.on("close", onSocketClose); 
-//     // socket.on("message", onSocketMessage ); 
-//     socket.on("message", (msg) => {
-//        const message = JSON.parse(msg);  
-//     switch (message.type) {
-//         case "new-message": 
-//        sockets.forEach((aSocket)=> aSocket.send
-//              (`${socket.nickname}: ${message.payload}`));
-//             break;
-//              case "nickname": 
-//             console.log(message.payload);
-//             socket["nickname"] = message.payload;
-//             break;
-//         }
-//     });
-// });
+const wss = new WebSocket.Server({ server }); 
+wss.on("connection", (socket) => {
+    sockets.push(socket); 
+    socket["nickname"] = "Anon";
+    console.log("connected to Browser");
+    socket.on("close", onSocketClose); 
+    // socket.on("message", onSocketMessage ); 
+    socket.on("message", (msg) => {
+       const message = JSON.parse(msg);  
+    switch (message.type) {
+        case "new-message": 
+       sockets.forEach((aSocket)=> aSocket.send
+             (`${socket.nickname}: ${message.payload}`));
+            break;
+             case "nickname": 
+            console.log(message.payload);
+            socket["nickname"] = message.payload;
+            break;
+        }
+    });
+});
